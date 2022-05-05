@@ -1,0 +1,76 @@
+version: '3.3'
+services:
+  proxy:
+    image: traefik
+    restart: unless-stopped
+    container_name: "traefik"
+    command:
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.federation.address=:8448"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+      - "8448:8448"
+
+  postgres:
+    image: postgres:14
+    restart: unless-stopped
+    volumes:
+      - ./postgresdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=synapse
+      - POSTGRES_USER=synapse
+      - POSTGRES_PASSWORD=STRONGPASSWORD
+      - POSTGRES_INITDB_ARGS=--locale=C --encoding=UTF8
+
+  element:
+    image: vectorim/element-web:latest
+    restart: unless-stopped
+    volumes:
+      - ./element-config.json:/app/config.json
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.http-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.http-https-redirect.redirectscheme.permanent=true"
+      - "traefik.http.routers.element.middlewares=http-https-redirect@docker"
+      - "traefik.http.routers.element.rule=Host(`chat.ulysseus.eu`)"
+      - "traefik.http.routers.element.entrypoints=web"
+      - "traefik.http.routers.element_secured.tls=true"
+      - "traefik.http.routers.element_secured.rule=Host(`chat.ulysseus.eu`)"
+      - "traefik.http.routers.element_secured.entrypoints=websecure"
+    depends_on:
+      - synapse
+    ports:
+      - 80
+      - 443
+        
+  synapse:
+    image: matrixdotorg/synapse:latest
+    restart: unless-stopped
+    volumes:
+      - ./synapse:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.synapse.middlewares=http-https-redirect@docker"
+      - "traefik.http.routers.synapse_secured.tls=true"
+      - "traefik.http.routers.synapse_secured.rule=Host(`matrix.ulysseus.eu`)"
+      - "traefik.http.routers.synapse_secured.entrypoints=websecure,federation"
+      - "traefik.http.routers.synapse.rule=Host(`matrix.ulysseus.eu`)"
+      - "traefik.http.routers.synapse.entrypoints=web"
+    networks:
+      default:
+        aliases:
+          - matrix.ulysseus.eu
+    ports:
+      - 8008
+      - 8009
+    depends_on:
+      - postgres
