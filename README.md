@@ -2,8 +2,9 @@
 ## Customize configuration files
 You should detect instances of ulysseus.eu and replace it with your own domain in docker-compose.yml and element-config.json
 ```bash
-export $MYDOMAIN=<yourdomain>
-sed 's|ulysseus.eu|$MYDOMAIN|g' docker-compose.yml element-config.json
+export MYDOMAIN=<yourdomain>
+sed -i "s|ulysseus.eu|$MYDOMAIN|g" element-config.json
+sed -i "s|ulysseus.eu|$MYDOMAIN|g" docker-compose.yml
 ```
 ## Generate synapse configuration files
 ```bash
@@ -13,7 +14,7 @@ docker run -it --rm \
     -e SYNAPSE_REPORT_STATS=yes \
     matrixdotorg/synapse:latest generate
 sudo mv synapse/homeserver.yaml homeserver.yaml.bak
-cat synapse/homeserver-template.yaml | sed 's|ulysseus.eu|$MYDOMAIN|g' > synapse/homeserver.yaml
+sed "s|ulysseus.eu|$MYDOMAIN|g" synapse/homeserver-template.yaml | sudo tee synapse/homeserver.yaml
 ```
 ## Create admin
 ```bash
