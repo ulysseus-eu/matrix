@@ -16,9 +16,13 @@ docker run -it --rm \
 sudo mv synapse/homeserver.yaml homeserver.yaml.bak
 sed "s|ulysseus.eu|$MYDOMAIN|g" synapse/homeserver-template.yaml | sudo tee synapse/homeserver.yaml
 ```
+## Launch your server
+```bash
+docker-compose up -d
+```
 ## Create admin
 ```bash
-sudo docker exec -it matrix_synapse_1 bash
+docker exec -it matrix_synapse_1 bash
 register_new_matrix_user -c /data/homeserver.yaml http://localhost:8008
 # reply to interactive questions (admin => yes)
 exit
