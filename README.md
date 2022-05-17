@@ -22,10 +22,8 @@ docker-compose up -d
 ```
 ## Create admin
 ```bash
-docker exec -it matrix_synapse_1 bash
-register_new_matrix_user -c /data/homeserver.yaml http://localhost:8008
+docker exec -it matrix_synapse_1 register_new_matrix_user -c /data/homeserver.yaml http://localhost:8008
 # reply to interactive questions (admin => yes)
-exit
 ```
 ## Test
 Your matrix server should be available at matrix.$MYDOMAIN  
